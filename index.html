@@ -118,16 +118,10 @@ function sendVote(){
       theme,
       environment
     };
-
-    // ✅ FIXAD FETCH (detta löser knappen)
-    fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      }
-    })
+    
+    fetch(API_URL + "?data=" + encodeURIComponent(JSON.stringify(data)))
+.then(() => loadData())
+.catch(err => alert("Fel: " + err));
     .then(() => loadData())
     .catch(err => alert("Fel vid röstning: " + err));
   });
