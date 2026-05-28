@@ -65,6 +65,7 @@ button {
 
 <script>
 
+// ✅ DIN URL (redan korrekt)
 const API_URL = "https://script.google.com/macros/s/AKfycbyCRhm3_YarCldLnFFsD3dr_efZ2_r-GIFB6QBhZjPakfXFbPLBGPBxToUB_4fSe5Y/exec";
 
 function validateInputs(taste, theme, environment){
@@ -93,7 +94,7 @@ function sendVote(){
   .then(res => res.json())
   .then(votes => {
 
-    // ✅ 1 röst per person
+    // ✅ stoppar dubbelröster
     let alreadyVoted = votes.some(v => 
       v.title.toLowerCase() === title.toLowerCase() &&
       v.name.toLowerCase() === name.toLowerCase()
@@ -118,10 +119,12 @@ function sendVote(){
       theme,
       environment
     };
-    
+
+    // ✅ FIXAD fetch (fungerar på mobil)
     fetch(API_URL + "?data=" + encodeURIComponent(JSON.stringify(data)))
-  .then(() => loadData())
-  .catch(err => alert("Fel vid röstning: " + err));
+      .then(() => loadData())
+      .catch(err => alert("Fel vid röstning: " + err));
+
   });
 }
 
@@ -145,7 +148,6 @@ function render(votes){
     }
 
     let avg = (Number(v.taste) + Number(v.theme) + Number(v.environment)) / 3;
-
     grouped[v.title].scores.push(avg);
   });
 
@@ -196,5 +198,4 @@ loadData();
 </script>
 
 </body>
-
 </html>
