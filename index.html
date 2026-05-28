@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>🌍 Jorden runt på en tallrik</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: linear-gradient(#fef3c7, #fde68a);
+  padding: 20px;
+}
+h1 { text-align:center; }
+
+.box {
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  margin-top:10px;
+}
+
+input {
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+}
+
+input:invalid {
+  border: 2px solid red;
+}
+
+button {
+  width:100%;
+  padding:12px;
+  background:#f97316;
+  color:white;
+  border:none;
+  border-radius:8px;
+}
+
+.winner {
+  background:#dcfce7;
+  border:2px solid green;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>🌍 Jorden runt på en tallrik</h1>
+
+<div class="box">
+<input id="title" placeholder="Tema (t.ex. Italien)">
+<input id="host" placeholder="Vem arrangerade?">
+<input id="name" placeholder="Ditt namn">
+
+<input id="taste" type="number" min="1" max="5" required placeholder="Smak (1-5)">
+<input id="theme" type="number" min="1" max="5" required placeholder="Temagenomförande (1-5)">
+<input id="environment" type="number" min="1" max="5" required placeholder="Miljö (1-5)">
+
+<button onclick="sendVote()">Rösta 🍷</button>
+</div>
+
+<div id="results"></div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbyCRhm3_YarCldLnFFsD3dr_efZ2_r-GIFB6QBhZjPakfXFbPLBGPBxToUB_4fSe5Y/exec";
+
+// ✅ kontroll av input 1–5
+function validateInputs(taste, theme, environment){
+  if(
+    taste < 1 || taste > 5 ||
+    theme < 1 || theme > 5 ||
+    environment < 1 || environment > 5
+  ){
+    alert("Alla betyg måste vara mellan 1 och 5!");
+    return false;
+  }
+  return true;
+}
+
+// ✅ skicka röst
+function sendVote(){function sendVote(){
+
+  let title = document.getElementById("title").value;
+  let name = document.getElementById("name").value;
+
+  if(!title || !name){
+    alert("Fyll i tema och namn!");
+    return;
+  }
+
+  fetch(API_URL)
+  .then(res => res.json())
+  .then(votes => {
+
+    // ✅ kontroll: har personen redan röstat?
+    let alreadyVoted = votes.some(v => 
+      v.title.toLowerCase() === title.toLowerCase() &&
+      v.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if(alreadyVoted){
+      alert("❌ Du har redan röstat på denna temakväll!");
+      return;
+    }
+
+    let taste = Number(document.getElementById("taste").value);
+    let theme = Number(document.getElementById("theme").value);
+    let environment = Number(document.getElementById("environment").value);
+
+    if(!validateInputs(taste, theme, environment)) return;
+
+    let data = {
+      title,
+      host: document.getElementById("host").value,
+      name,
+      taste,
+      theme,
+      environment
+    };
+
+    fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify(data)
+    }).then(() => loadData());
+
+  });
+}};
+
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(data)
+  }).then(() => loadData());
+}
+
+// ✅ hämta data
+function loadData(){
+  fetch(API_URL)
+  .then(res => res.json())
+  .then(data => render(data));
+}
+
+// ✅ rendera liga
+function render(votes){
+
+  let grouped = {};
+
+  votes.forEach(v => {
+    if(!grouped[v.title]){
+      grouped[v.title] = {
+        host: v.host,
+        scores: []
+      };
+    }
+
+    let avg = (Number(v.taste) + Number(v.theme) + Number(v.environment)) / 3;
+    grouped[v.title].scores.push(avg);
+  });
+
+  let result = [];
+
+  for(let key in grouped){
+    let scores = grouped[key].scores;
+
+    let total = scores.reduce((a,b)=>a+b,0);
+    let avg = total / scores.length;
+
+    result.push({
+      title: key,
+      host: grouped[key].host,
+      avg: avg,
+      votes: scores.length   // ✅ antal röster
+    });
+  }
+
+  result.sort((a,b)=>b.avg - a.avg);
+
+  let container = document.getElementById("results");
+  container.innerHTML = "";
+
+  result.forEach((r, i) => {
+    let div = document.createElement("div");
+    div.className = "box";
+
+    if(i === 0){
+      div.classList.add("winner");
+      div.innerHTML += "🏆 VINNARE<br>";
+    }
+
+    div.innerHTML += `
+      <h3>${r.title}</h3>
+      <p>Arrangör: ${r.host}</p>
+      <p>⭐ Snitt: ${r.avg.toFixed(2)}</p>
+      <p>👥 Antal röster: ${r.votes}</p>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>
