@@ -120,10 +120,8 @@ function sendVote(){
     };
     
     fetch(API_URL + "?data=" + encodeURIComponent(JSON.stringify(data)))
-.then(() => loadData())
-.catch(err => alert("Fel: " + err));
-    .then(() => loadData())
-    .catch(err => alert("Fel vid röstning: " + err));
+  .then(() => loadData())
+  .catch(err => alert("Fel vid röstning: " + err));
   });
 }
 
