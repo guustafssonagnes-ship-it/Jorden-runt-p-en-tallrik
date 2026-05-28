@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>🌍 Jorden runt på en tallrik</title>
+<title>🌍 Temakväll Liga</title>
 
 <style>
 body {
@@ -27,10 +27,6 @@ input {
   margin:5px 0;
 }
 
-input:invalid {
-  border: 2px solid red;
-}
-
 button {
   width:100%;
   padding:12px;
@@ -38,6 +34,7 @@ button {
   color:white;
   border:none;
   border-radius:8px;
+  font-weight:bold;
 }
 
 .winner {
@@ -50,16 +47,16 @@ button {
 
 <body>
 
-<h1>🌍 Jorden runt på en tallrik</h1>
+<h1>🌍 Temakväll Liga</h1>
 
 <div class="box">
 <input id="title" placeholder="Tema (t.ex. Italien)">
 <input id="host" placeholder="Vem arrangerade?">
 <input id="name" placeholder="Ditt namn">
 
-<input id="taste" type="number" min="1" max="5" required placeholder="Smak (1-5)">
-<input id="theme" type="number" min="1" max="5" required placeholder="Temagenomförande (1-5)">
-<input id="environment" type="number" min="1" max="5" required placeholder="Miljö (1-5)">
+<input id="taste" type="number" min="1" max="5" placeholder="Smak (1-5)">
+<input id="theme" type="number" min="1" max="5" placeholder="Temagenomförande (1-5)">
+<input id="environment" type="number" min="1" max="5" placeholder="Miljö (1-5)">
 
 <button onclick="sendVote()">Rösta 🍷</button>
 </div>
@@ -70,21 +67,19 @@ button {
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyCRhm3_YarCldLnFFsD3dr_efZ2_r-GIFB6QBhZjPakfXFbPLBGPBxToUB_4fSe5Y/exec";
 
-// ✅ kontroll av input 1–5
 function validateInputs(taste, theme, environment){
   if(
     taste < 1 || taste > 5 ||
     theme < 1 || theme > 5 ||
     environment < 1 || environment > 5
   ){
-    alert("Alla betyg måste vara mellan 1 och 5!");
+    alert("Alla betyg måste vara mellan 1–5!");
     return false;
   }
   return true;
 }
 
-// ✅ skicka röst
-function sendVote(){function sendVote(){
+function sendVote(){
 
   let title = document.getElementById("title").value;
   let name = document.getElementById("name").value;
@@ -98,14 +93,14 @@ function sendVote(){function sendVote(){
   .then(res => res.json())
   .then(votes => {
 
-    // ✅ kontroll: har personen redan röstat?
+    // ✅ 1 röst per person
     let alreadyVoted = votes.some(v => 
       v.title.toLowerCase() === title.toLowerCase() &&
       v.name.toLowerCase() === name.toLowerCase()
     );
 
     if(alreadyVoted){
-      alert("❌ Du har redan röstat på denna temakväll!");
+      alert("❌ Du har redan röstat på denna kväll!");
       return;
     }
 
@@ -124,33 +119,32 @@ function sendVote(){function sendVote(){
       environment
     };
 
+    // ✅ FIXAD FETCH (detta löser knappen)
     fetch(API_URL, {
       method: "POST",
-      body: JSON.stringify(data)
-    }).then(() => loadData());
-
+      body: JSON.stringify(data),
+      redirect: "follow",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      }
+    })
+    .then(() => loadData())
+    .catch(err => alert("Fel vid röstning: " + err));
   });
-}};
-
-  fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify(data)
-  }).then(() => loadData());
 }
 
-// ✅ hämta data
 function loadData(){
   fetch(API_URL)
   .then(res => res.json())
   .then(data => render(data));
 }
 
-// ✅ rendera liga
 function render(votes){
 
   let grouped = {};
 
   votes.forEach(v => {
+
     if(!grouped[v.title]){
       grouped[v.title] = {
         host: v.host,
@@ -159,6 +153,7 @@ function render(votes){
     }
 
     let avg = (Number(v.taste) + Number(v.theme) + Number(v.environment)) / 3;
+
     grouped[v.title].scores.push(avg);
   });
 
@@ -174,7 +169,7 @@ function render(votes){
       title: key,
       host: grouped[key].host,
       avg: avg,
-      votes: scores.length   // ✅ antal röster
+      votes: scores.length
     });
   }
 
@@ -184,6 +179,7 @@ function render(votes){
   container.innerHTML = "";
 
   result.forEach((r, i) => {
+
     let div = document.createElement("div");
     div.className = "box";
 
@@ -208,4 +204,5 @@ loadData();
 </script>
 
 </body>
+
 </html>
