@@ -65,9 +65,9 @@ button {
 
 <script>
 
-// ✅ DIN URL (redan korrekt)
 const API_URL = "https://script.google.com/macros/s/AKfycbyCRhm3_YarCldLnFFsD3dr_efZ2_r-GIFB6QBhZjPakfXFbPLBGPBxToUB_4fSe5Y/exec";
 
+// ✅ validering 1-5
 function validateInputs(taste, theme, environment){
   if(
     taste < 1 || taste > 5 ||
@@ -80,6 +80,7 @@ function validateInputs(taste, theme, environment){
   return true;
 }
 
+// ✅ rösta
 function sendVote(){
 
   let title = document.getElementById("title").value;
@@ -91,11 +92,19 @@ function sendVote(){
   }
 
   fetch(API_URL)
-  .then(res => res.json())
-  .then(votes => {
+  .then(res => res.text())
+  .then(text => {
 
-    // ✅ stoppar dubbelröster
-    let alreadyVoted = votes.some(v => 
+    let votes = [];
+
+    try {
+      votes = JSON.parse(text);
+    } catch {
+      votes = [];
+    }
+
+    // ✅ stopp för dubbelröst
+    let alreadyVoted = votes.some(v =>
       v.title.toLowerCase() === title.toLowerCase() &&
       v.name.toLowerCase() === name.toLowerCase()
     );
@@ -120,7 +129,7 @@ function sendVote(){
       environment
     };
 
-    // ✅ FIXAD fetch (fungerar på mobil)
+    // ✅ mobil-säker fetch
     fetch(API_URL + "?data=" + encodeURIComponent(JSON.stringify(data)))
       .then(() => loadData())
       .catch(err => alert("Fel vid röstning: " + err));
@@ -128,13 +137,33 @@ function sendVote(){
   });
 }
 
+// ✅ hämta data
 function loadData(){
   fetch(API_URL)
-  .then(res => res.json())
-  .then(data => render(data));
+  .then(res => res.text())
+  .then(text => {
+    try {
+      let data = JSON.parse(text);
+      render(data);
+    } catch {
+      console.log("Ingen data ännu");
+      render([]);
+    }
+  })
+  .catch(err => {
+    console.log("Fel:", err);
+    render([]);
+  });
 }
 
+// ✅ visa liga
 function render(votes){
+
+  if(!votes || votes.length === 0){
+    document.getElementById("results").innerHTML =
+      "<div class='box'>Inga röster ännu 🍷</div>";
+    return;
+  }
 
   let grouped = {};
 
@@ -162,7 +191,7 @@ function render(votes){
     result.push({
       title: key,
       host: grouped[key].host,
-      avg: avg,
+      avg,
       votes: scores.length
     });
   }
@@ -193,6 +222,7 @@ function render(votes){
   });
 }
 
+// ✅ ladda vid start
 loadData();
 
 </script>
